@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import connectDB from "./db/index.js";
 import { app } from './app.js';
+import userRoute from "./routes/user.route.js"
 
 // Load environment variables
 dotenv.config();
@@ -16,3 +17,5 @@ connectDB()
 .catch((error) => {
     console.log("Database Connection Error!!!", error);
 })
+
+app.use('/api/user', userRoute)
