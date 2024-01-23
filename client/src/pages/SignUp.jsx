@@ -1,8 +1,53 @@
-import { Button, Label, TextInput } from 'flowbite-react'
-import React from 'react'
-import { Link } from 'react-router-dom'
+import { Button, Label, TextInput, Alert, Spinner } from 'flowbite-react'
+import React, { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
 function SignUp() {
+  const navigate = useNavigate()
+
+  const [formData, setFormData] = useState({})
+
+  const [errorMessage, setErrorMessage] = useState(null)
+
+  const [loading, setLoading] = useState(false)
+
+  const handleChange = async (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value.trim()})
+  }
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    if(!formData.username || !formData.email || !formData.password) {
+      return setErrorMessage("Please fill all required fields")
+    }
+    
+    try {
+      setLoading(true)
+      setErrorMessage(null)
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+
+      const data = await res.json()
+      if(data.success === false) {
+        return setErrorMessage(data.message)
+      }
+      setLoading(false)
+
+      if(res.ok) {
+        navigate('/signin')
+      }
+
+    } catch (error) {
+      setErrorMessage(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <>
       <div className='min-h-screen mt-20'>
@@ -20,16 +65,22 @@ function SignUp() {
 
           {/* Right Side div */}
           <div className='flex-1'>
-            <form className='flex flex-col gap-4'>
+            <form className='flex flex-col gap-4' onSubmit={handleSubmit}>
               <div>
                 <Label value='Your Username'/>
-                <TextInput type='text' placeholder='username' id="username"/>
+                <TextInput type='text' placeholder='username' id="username" onChange={handleChange}/>
                 <Label value='Your Email'/>
-                <TextInput type='text' placeholder='example@gmail.com' id="email"/>
+                <TextInput type='email' placeholder='example@gmail.com' id="email" onChange={handleChange}/>
                 <Label value='Your Password'/>
-                <TextInput type='text' placeholder='password' id="password"/>
+                <TextInput type='password' placeholder='password' id="password" onChange={handleChange}/>
               </div>
-              <Button gradientDuoTone="purpleToPink" type='submit' outline>Sign Up</Button>
+              <Button gradientDuoTone="purpleToPink" type='submit' outline disabled={loading} enable="">
+                {loading ? (
+                  <>
+                    <Spinner size='sm'/>
+                    <span className='pl-3'>Loading...</span>
+                  </>
+                ): ('Sign Up')}</Button>
             </form>
             <div className='flex gap-2 text-sm mt-5'>
               <span>
@@ -39,6 +90,13 @@ function SignUp() {
                 Sign In
               </Link>
             </div>
+            {
+              errorMessage && (
+                <Alert className='mt-5' color="failure">
+                  {errorMessage}
+                </Alert>
+              )
+            }
           </div>
         </div>
       </div>
