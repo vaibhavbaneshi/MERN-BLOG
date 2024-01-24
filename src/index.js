@@ -1,8 +1,7 @@
 import dotenv from "dotenv";
 import connectDB from "./db/index.js";
 import { app } from './app.js';
-import userRoute from "./routes/user.route.js"
-import authRoute from "./routes/auth.route.js"
+
 
 // Load environment variables
 dotenv.config();
@@ -19,5 +18,3 @@ connectDB()
     console.log("Database Connection Error!!!", error);
 })
 
-app.use('/api/user', userRoute)
-app.use('/api/auth', authRoute)

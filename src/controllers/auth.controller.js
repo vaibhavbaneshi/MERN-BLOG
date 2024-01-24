@@ -4,14 +4,31 @@ import User from "../models/user.model.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import bcryptjs from "bcryptjs"
 
+const generateAccessandRefreshToken = async (userId) => {
+    try {
+        const user = await User.findById(userId)
+        const accessToken = user.generateAccessToken()
+        const refreshToken = user.generateRefreshToken()
+
+        user.refreshToken = refreshToken
+        await user.save({validateBeforeSave: false})
+
+        return {accessToken, refreshToken}
+    } catch (error) {
+        res.status(error.statusCode).json({
+            success: error.success,
+            message: error.message
+        })
+    }
+}
+
 const signup = asyncHandler( async (req, res, next) => {
     const {username, email, password} = req.body
 
     if(
         [username, email, password].some((field) => field?.trim() === "")
     ) {
-        return res.status(400).json({message: "All fields are required"})
-
+        return next(errorHandler(409, false, "All fields are required"))
     }
 
     const existedUser = await User.findOne({
@@ -19,8 +36,8 @@ const signup = asyncHandler( async (req, res, next) => {
     })
 
     if(existedUser) {
-        // next(errorHandler(409, false, "User with this email or username already exist"))
-        return res.status(400).json({success: false, message: "User with this email or username already exist"})
+        return next(errorHandler(409, false, "User with this email or username already exist"))
+        // return res.status(400).json({success: false, message: "User with this email or username already exist"})
     }
 
     const encryptedPassword = bcryptjs.hashSync(password, 10)
@@ -34,7 +51,7 @@ const signup = asyncHandler( async (req, res, next) => {
     const createdUser = await User.findById(user._id)?.select("-password")
 
     if(!createdUser) {
-       next(errorHandler(500, "Something went wrong while registering the user"))
+       return next(errorHandler(500, false, "Something went wrong while registering the user"))
     }
  
     return res.status(201).json(
@@ -42,4 +59,50 @@ const signup = asyncHandler( async (req, res, next) => {
     )
 })
 
-export {signup}
+const signin = asyncHandler(async (req, res, next) => {
+    const {email, password} = req.body
+
+    if(
+        [username, email, password].some((field) => field?.trim() === "")
+    ) {
+        return res.status(400).json({message: "All fields are required"})
+    }
+
+    const validUser = await User.findOne({email})
+
+    if(!validUser) {
+        return next(errorHandler(400, false,"User not found"))
+    }
+
+    const validUserPassword = validUser.password
+
+    if(!(bcryptjs.compareSync(password, validUserPassword))) {
+        return next(errorHandler(400, false,"Incorrect Password"))
+    }
+
+    const {accessToken, refreshToken} = await generateAccessandRefreshToken(validUser._id)
+
+    const loggedInUser = await User.findById(validUser._id).select("-password -refreshToken")
+
+    const options = {
+        httpOnly: true,
+    }
+
+    return res
+            .status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json(
+                new ApiResponse(
+                    200, {
+                        user: loggedInUser, accessToken, refreshToken
+                    },
+                    "User logged in successfully"
+                )
+            )
+})
+
+export {
+    signup,
+    signin
+}
