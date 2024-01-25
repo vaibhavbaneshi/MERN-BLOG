@@ -29,6 +29,10 @@ function Header() {
                 <Button gradientDuoTone="purpleToBlue" outline>Sign In</Button>
             </Link>
 
+            <Link to="/signup">
+                <Button gradientDuoTone="purpleToBlue" outline>Sign Up</Button>
+            </Link>
+
             <Navbar.Toggle />
 
         </div>
