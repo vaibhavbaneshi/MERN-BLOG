@@ -102,7 +102,67 @@ const signin = asyncHandler(async (req, res, next) => {
             )
 })
 
+const googleAuth = asyncHandler( async (req, res, next) => {
+    const {name, email, googlePhotoUrl} = req.body
+
+    const user = await User.findOne({ email })
+    
+    if(user) {
+        const {accessToken, refreshToken} = await generateAccessandRefreshToken(user._id)
+    
+        const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+    
+        const options = {
+            httpOnly: true,
+        }
+
+        return res
+            .status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json(
+                new ApiResponse(
+                    200, {
+                        user: loggedInUser, accessToken, refreshToken
+                    },
+                    "User logged in successfully"
+                )
+            )
+    }
+
+    else {
+        const generatedPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8)
+        const hashedPassword = bcryptjs.hashSync(generatedPassword, 10)
+        const newUser = await User.create({
+            username: name?.toLowerCase().split(' ').join('') + Math.random().toString(9).slice(-4),
+            email,
+            password: hashedPassword,
+            profilePicture: googlePhotoUrl
+        })
+
+        const {accessToken, refreshToken} = await generateAccessandRefreshToken(newUser._id)
+
+        const loggedInUser = await User.findById(newUser._id).select("-password")
+
+        // const { password, ...rest} = newUser._doc
+
+        return res
+            .status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json(
+                new ApiResponse(
+                    200, {
+                        user: rest, accessToken, refreshToken
+                    },
+                    "User logged in successfully"
+                )
+            )
+    }
+})
+
 export {
     signup,
-    signin
+    signin,
+    googleAuth
 }
