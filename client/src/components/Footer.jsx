@@ -55,10 +55,10 @@ function FooterComponent() {
                 <div className='w-full sm:flex sm:items-center sm:justify-between'>
                     <Footer.Copyright href="#" by="Vaibhav's Blog" year = {new Date().getFullYear()}/>
                     <div className='flex gap-6 sm:mt-0 mt-4 sm:justify-center'>
-                        <Footer.Icon href='https://www.facebook.com' icon={BsFacebook}/>
-                        <Footer.Icon href='https://www.instagram.com/vaibhav_baneshi' icon={BsInstagram}/>
-                        <Footer.Icon href='https://www.twitter.com' icon={BsTwitterX}/>
-                        <Footer.Icon href='https://www.github.com/vaibhavbaneshi' icon={BsGithub}/>
+                        <Footer.Icon target = "_blank" href='https://www.facebook.com' icon={BsFacebook}/>
+                        <Footer.Icon target = "_blank" href='https://www.instagram.com/vaibhav_baneshi' icon={BsInstagram}/>
+                        <Footer.Icon target = "_blank" href='https://www.twitter.com' icon={BsTwitterX}/>
+                        <Footer.Icon target = "_blank" href='https://www.github.com/vaibhavbaneshi' icon={BsGithub}/>
                     </div>
                 </div>
             </div>

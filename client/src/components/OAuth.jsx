@@ -29,7 +29,7 @@ function OAuth() {
                     googlePhotoURL: resultFromGoogle.user.photoURL
                 })
             })
-
+            
             const data = await res.json()
 
             if(res.ok) {

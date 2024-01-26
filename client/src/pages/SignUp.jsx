@@ -1,15 +1,18 @@
 import { Button, Label, TextInput, Alert, Spinner } from 'flowbite-react'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { signInStart, signInSuccess, signInFailure } from '../redux/user/userSlice'
+import { useDispatch, useSelector } from 'react-redux'
+import OAuth from '../components/OAuth'
 
 function SignUp() {
   const navigate = useNavigate()
 
   const [formData, setFormData] = useState({})
 
-  const [errorMessage, setErrorMessage] = useState(null)
+  const {loading, error: errorMessage} = useSelector((state) => state.user)
 
-  const [loading, setLoading] = useState(false)
+  const dispatch = useDispatch()
 
   const handleChange = async (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value.trim()})
@@ -18,13 +21,12 @@ function SignUp() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if(!formData.username || !formData.email || !formData.password) {
-      return setErrorMessage("Please fill all required fields")
+    if(!formData.email || !formData.password) {
+      return dispatch(signInFailure("Please fill out all the required fields"))
     }
     
     try {
-      setLoading(true)
-      setErrorMessage(null)
+      dispatch(signInStart())
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -33,18 +35,16 @@ function SignUp() {
 
       const data = await res.json()
       if(data.success === false) {
-        return setErrorMessage(data.message)
+        dispatch(signInFailure(data.message))
       }
-      setLoading(false)
 
       if(res.ok) {
+        dispatch(signInSuccess(data))
         navigate('/signin')
       }
 
     } catch (error) {
-      setErrorMessage(error.message)
-    } finally {
-      setLoading(false)
+      dispatch(signInFailure(data.message))
     }
   }
 
@@ -59,7 +59,7 @@ function SignUp() {
               Blog
             </Link>
             <p className='text-sm mt-5'>
-              This is a demo project. You can sign-up with your email and password or with Google
+              This is a demo project. You can sign-in with your email and password or with Google
             </p>
           </div>
 
@@ -68,7 +68,7 @@ function SignUp() {
             <form className='flex flex-col gap-4' onSubmit={handleSubmit}>
               <div>
                 <Label value='Your Username'/>
-                <TextInput type='text' placeholder='username' id="username" onChange={handleChange}/>
+                <TextInput type='username' placeholder='username' id="username" onChange={handleChange}/>
                 <Label value='Your Email'/>
                 <TextInput type='email' placeholder='example@gmail.com' id="email" onChange={handleChange}/>
                 <Label value='Your Password'/>

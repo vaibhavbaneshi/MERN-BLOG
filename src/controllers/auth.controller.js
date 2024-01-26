@@ -103,7 +103,7 @@ const signin = asyncHandler(async (req, res, next) => {
 })
 
 const googleAuth = asyncHandler( async (req, res, next) => {
-    const {name, email, googlePhotoUrl} = req.body
+    const {name, email, googlePhotoURL} = req.body
 
     const user = await User.findOne({ email })
     
@@ -133,16 +133,19 @@ const googleAuth = asyncHandler( async (req, res, next) => {
     else {
         const generatedPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8)
         const hashedPassword = bcryptjs.hashSync(generatedPassword, 10)
+
         const newUser = await User.create({
             username: name?.toLowerCase().split(' ').join('') + Math.random().toString(9).slice(-4),
             email,
             password: hashedPassword,
-            profilePicture: googlePhotoUrl
+            profilePicture: googlePhotoURL
         })
 
         const {accessToken, refreshToken} = await generateAccessandRefreshToken(newUser._id)
 
-        const loggedInUser = await User.findById(newUser._id).select("-password")
+        const loggedInUser = await User.findById(newUser._id).select("-password -refreshToken")
+
+        console.log(res.json(loggedInUser));
 
         // const { password, ...rest} = newUser._doc
 
@@ -153,7 +156,7 @@ const googleAuth = asyncHandler( async (req, res, next) => {
             .json(
                 new ApiResponse(
                     200, {
-                        user: rest, accessToken, refreshToken
+                        user: loggedInUser, accessToken, refreshToken
                     },
                     "User logged in successfully"
                 )
