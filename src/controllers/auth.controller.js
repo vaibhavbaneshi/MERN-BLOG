@@ -116,6 +116,8 @@ const googleAuth = asyncHandler( async (req, res, next) => {
             httpOnly: true,
         }
 
+        console.log(res.json(loggedInUser));
+
         return res
             .status(200)
             .cookie("accessToken", accessToken, options)
