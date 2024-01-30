@@ -1,9 +1,9 @@
 import express from "express"
-import cookieParser from "cookie-parser"
 import cors from "cors"
 import userRoute from "./routes/user.route.js"
 import authRoute from "./routes/auth.route.js" 
 // import { ApiError } from '../src/utils/ApiError.js';
+import cookieParser from "cookie-parser"
 
 const app = express()
 
@@ -13,32 +13,13 @@ app.use(cors({
 }))
 
 app.use(express.json())
+app.use(cookieParser())
+
 app.use(express.urlencoded({extended: true, limit: "16kb"}))
 app.use(express.static("public"))
-app.use(cookieParser())
 
 app.use('/api/user', userRoute)
 app.use('/api/auth', authRoute)
-
-// app.use((err, req, res, next) => {
-//     if (err instanceof ApiError) {
-//       res.status(err.statusCode).json({
-//         success: false,
-//         message: err.message,
-//         data: err.data,
-//         errors: err.errors,
-
-//     });
-    
-//     } else {
-//       // Handle other types of errors
-//       res.status(500).json({
-//         success: false,
-//         message: 'Internal Server Error',
-//         error: err.message,
-//       });
-//     }
-//   });
 
 app.use((err, req, res, next) => {
     const statusCode = err.statusCode || 500;
